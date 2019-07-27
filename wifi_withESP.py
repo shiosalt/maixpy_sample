@@ -21,8 +21,8 @@ def esp_connect():
             print("network connection failed.\n")
             return False
     except:
-        print(" try to connect ESP8286 TX to pin-{},RX to pin-{}".format(board_info.WIFI_TX,board_info.WIFI_RX))
-        print(" ,and ESP8286 must be runing on AT command mode.\n")
+        print(" try to connect ESP8285,8286 TX to pin-{},RX to pin-{}".format(board_info.WIFI_TX,board_info.WIFI_RX))
+        print(" ,and ESP8285,8286 must be runing on AT command mode.\n")
         return False
 
 if(esp_connect()):
