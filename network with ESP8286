@@ -1,0 +1,38 @@
+import network
+import machine
+from board import board_info
+from fpioa_manager import fm
+
+SSID = "SSID"
+SSID_PWD = "PASSWORD"
+timezonehour = 9 #Japan
+
+def esp_connect():
+    fm.register(board_info.WIFI_RX, fm.fpioa.UART2_TX)
+    fm.register(board_info.WIFI_TX, fm.fpioa.UART2_RX)
+    uart = machine.UART(machine.UART.UART2, 115200,timeout=1000, read_buf_len=4096)
+    try:
+        nic=network.ESP8285(uart)
+        nic.connect(SSID,SSID_PWD)
+        if (nic.isconnected):
+            print("ip:{}/{}".format(nic.ifconfig()[0],nic.ifconfig()[1]))
+            return True
+        else:
+            print("network connection failed.\n")
+            return False
+    except:
+        print(" try to connect ESP8286 TX to pin-{},RX to pin-{}".format(board_info.WIFI_TX,board_info.WIFI_RX))
+        print(" ,and ESP8286 must be runing on AT command mode.\n")
+        return False
+
+if(esp_connect()):
+    host = "pool.ntp.org"
+    settime()
+    import utime
+    t = utime.localtime()
+    print("{0}/{1:0=2}/{2:0=2} {3:0=2}:{4:0=2}".format(t[0],t[1],t[2],t[3],t[4]) )
+else:
+    print("esp connection error.\n")
+
+SSID = ""
+SSID_PWD = ""
