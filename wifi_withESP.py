@@ -1,7 +1,10 @@
+import usocket as socket
+import ustruct as struct
 import network
 import machine
 from board import board_info
 from fpioa_manager import fm
+NTP_DELTA = 3155673600
 
 SSID = "SSID"
 SSID_PWD = "PASSWORD"
@@ -18,12 +21,41 @@ def esp_connect():
             print("ip:{}/{}".format(nic.ifconfig()[0],nic.ifconfig()[1]))
             return True
         else:
-            print("network connection failed.\n")
-            return False
+            sleep(1)  # retry
+            if (nic.isconnected):
+                print("ip:{}/{}".format(nic.ifconfig()[0],nic.ifconfig()[1]))
+                return True
+            else:
+                print("network connection failed.\n")
+                return False
+
     except:
-        print(" try to connect ESP8285,8286 TX to pin-{},RX to pin-{}".format(board_info.WIFI_TX,board_info.WIFI_RX))
-        print(" ,and ESP8285,8286 must be runing on AT command mode.\n")
+        print(" try to connect ESP8286 TX to pin-{},RX to pin-{}".format(board_info.WIFI_TX,board_info.WIFI_RX))
+        print(" ,and ESP8286 must be runing on AT command mode.\n")
         return False
+
+def ntptime():
+# (date(2000, 1, 1) - date(1900, 1, 1)).days * 24*60*60
+    NTP_QUERY = bytearray(48)
+    NTP_QUERY[0] = 0x1b
+    addr = socket.getaddrinfo(host, 123)[0][-1]
+    so = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    so.settimeout(1)
+    """ maixpy seems not yet support sendto.
+    res = so.sendto(NTP_QUERY, addr)
+    """
+    so.connect(addr)
+    so.send(NTP_QUERY)
+    msg = so.recv(48)
+    so.close()
+    val = struct.unpack("!I", msg[40:44])[0]
+    return val - NTP_DELTA
+
+def settime():
+    t = ntptime() + timezonehour *60*60
+    import utime
+    tm = utime.localtime(t)
+    utime.set_time(tm)
 
 if(esp_connect()):
     host = "pool.ntp.org"
