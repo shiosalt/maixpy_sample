@@ -4,7 +4,6 @@ import network
 import machine
 from board import board_info
 from fpioa_manager import fm
-NTP_DELTA = 3155673600
 
 SSID = "SSID"
 SSID_PWD = "PASSWORD"
@@ -35,7 +34,10 @@ def esp_connect():
         return False
 
 def ntptime():
-# (date(2000, 1, 1) - date(1900, 1, 1)).days * 24*60*60
+    NTP_DELTA = 1009843200
+    #NTP_DELTA = 3155673600
+    # maixpy : (date(2032, 1, 1) - date(2000, 1, 1)).days * 24*60*60
+    # usual  : (date(2000, 1, 1) - date(1900, 1, 1)).days * 24*60*60
     NTP_QUERY = bytearray(48)
     NTP_QUERY[0] = 0x1b
     addr = socket.getaddrinfo(host, 123)[0][-1]
@@ -63,6 +65,8 @@ if(esp_connect()):
     import utime
     t = utime.localtime()
     print("{0}/{1:0=2}/{2:0=2} {3:0=2}:{4:0=2}".format(t[0],t[1],t[2],t[3],t[4]) )
+    #this may show strange year, but date of file creation is collect when writing to SD card.
+    #(maybe maixpy's problem)
 else:
     print("esp connection error.\n")
 
